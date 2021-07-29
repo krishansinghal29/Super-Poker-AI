@@ -1,0 +1,2 @@
+remaining: Board, Pots, pAllin,  currentPlayer, pbetCurrentRound, Action buttons
+done: pchips, pCards, pFolded,
