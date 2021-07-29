@@ -209,6 +209,9 @@ class Ui_MainWindow(object):
         self.cards_b5.setText("")
         self.cards_b5.setPixmap(QtGui.QPixmap("../resources/card_back_fold.png"))
         self.cards_b5.setObjectName("cards_b5")
+        self.CBRpot = QtWidgets.QLabel(self.centralwidget)
+        self.CBRpot.setGeometry(QtCore.QRect(470, 410, 110, 16))
+        self.CBRpot.setObjectName("CBRpot")
         self.pot5 = QtWidgets.QLabel(self.centralwidget)
         self.pot5.setGeometry(QtCore.QRect(330, 390, 55, 16))
         self.pot5.setObjectName("pot5")
@@ -260,6 +263,27 @@ class Ui_MainWindow(object):
         self.allin_p6.setPixmap(QtGui.QPixmap("../resources/allin.png"))
         self.allin_p6.setScaledContents(True)
         self.allin_p6.setObjectName("allin_p6")
+        self.foldButton = QtWidgets.QPushButton(self.centralwidget)
+        self.foldButton.setGeometry(QtCore.QRect(100, 730, 131, 61))
+        self.foldButton.setObjectName("foldButton")
+        self.allinButton = QtWidgets.QPushButton(self.centralwidget)
+        self.allinButton.setGeometry(QtCore.QRect(750, 720, 131, 61))
+        self.allinButton.setObjectName("allinButton")
+        self.callButton = QtWidgets.QPushButton(self.centralwidget)
+        self.callButton.setGeometry(QtCore.QRect(260, 730, 131, 61))
+        self.callButton.setObjectName("callButton")
+        self.raiseButton = QtWidgets.QPushButton(self.centralwidget)
+        self.raiseButton.setGeometry(QtCore.QRect(490, 750, 131, 61))
+        self.raiseButton.setObjectName("raiseButton")
+        self.raiseButton1 = QtWidgets.QPushButton(self.centralwidget)
+        self.raiseButton1.setGeometry(QtCore.QRect(420, 700, 81, 31))
+        self.raiseButton1.setObjectName("raiseButton1")
+        self.raiseButton2 = QtWidgets.QPushButton(self.centralwidget)
+        self.raiseButton2.setGeometry(QtCore.QRect(530, 700, 81, 31))
+        self.raiseButton2.setObjectName("raiseButton2")
+        self.raiseButton3 = QtWidgets.QPushButton(self.centralwidget)
+        self.raiseButton3.setGeometry(QtCore.QRect(630, 700, 81, 31))
+        self.raiseButton3.setObjectName("raiseButton3")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 985, 26))
@@ -299,6 +323,14 @@ class Ui_MainWindow(object):
         self.pot1.setText(_translate("MainWindow", "Pot1: 0"))
         self.pot2.setText(_translate("MainWindow", "Pot2: 0"))
         self.pot4.setText(_translate("MainWindow", "Pot4: 0"))
+        self.CBRpot.setText(_translate("MainWindow", "CBR Bets: 0"))
+        self.foldButton.setText(_translate("MainWindow", "FOLD"))
+        self.allinButton.setText(_translate("MainWindow", "ALL IN"))
+        self.callButton.setText(_translate("MainWindow", "CALL/CHECK"))
+        self.raiseButton.setText(_translate("MainWindow", "RAISE"))
+        self.raiseButton1.setText(_translate("MainWindow", "1/3xPot"))
+        self.raiseButton2.setText(_translate("MainWindow", "1/2xPot"))
+        self.raiseButton3.setText(_translate("MainWindow", "1xPot"))
 
         self.p6_pBet.setHidden(True)
         self.p1_pBet.setHidden(True)
@@ -311,6 +343,7 @@ class Ui_MainWindow(object):
         self.pot1.setHidden(True)
         self.pot2.setHidden(True)
         self.pot4.setHidden(True)
+        self.CBRpot.setHidden(True)
 
         self.allin_p1.setHidden(True)
         self.allin_p2.setHidden(True)
@@ -333,14 +366,77 @@ class Ui_MainWindow(object):
         self.turn_p5.setHidden(True)
         self.turn_p6.setHidden(True)
 
+        self.foldButton.clicked.connect(lambda: self.selectAction('F'))
+        self.callButton.clicked.connect(lambda: self.selectAction('C'))
+        self.allinButton.clicked.connect(lambda: self.selectAction('A'))
+        self.raiseButton.clicked.connect(self.selectraiseAction)
+        self.raiseButton1.clicked.connect(lambda: self.selectAction('D'))
+        self.raiseButton2.clicked.connect(lambda: self.selectAction('E'))
+        self.raiseButton3.clicked.connect(lambda: self.selectAction('F'))
+
+        self.foldButton.setHidden(True)
+        self.callButton.setHidden(True)
+        self.allinButton.setHidden(True)
+        self.raiseButton.setHidden(True)
+        self.raiseButton1.setHidden(True)
+        self.raiseButton2.setHidden(True)
+        self.raiseButton3.setHidden(True)
+
         self.startHand.clicked.connect(self.funstartHand)
+        self.actions=[]
+
+    def selectAction(self,action):
+        if action in traverse_actions.ACTIONS_DIC:
+            self.raiseAction=action
+            potSize=sum(self.Node.chips)+sum(self.Node.pbetCurrentRound)
+            betratio=traverse_actions.ACTIONS_DIC[action]
+            bet=betratio*potSize
+            self.raiseButton.setText("RAISE "+str(int(bet)))
+            self.raiseButton.setHidden(False)
+        else:
+            self.action=action
+            self.foldButton.setHidden(True)
+            self.callButton.setHidden(True)
+            self.allinButton.setHidden(True)
+            self.raiseButton.setHidden(True)
+            self.raiseButton1.setHidden(True)
+            self.raiseButton2.setHidden(True)
+            self.raiseButton3.setHidden(True)
+            index=None
+            for i,e in enumerate(self.actions):
+                if e==self.action:
+                    index=i
+                    break
+            traverse_actions.doAction(self.Node, self.actions[index])
+            self.displaycurrentstate(self.Node)
+            self.traversehand(self.Node)
+            return 
+
+    def selectraiseAction(self):
+        self.action=self.raiseAction
+        self.foldButton.setHidden(True)
+        self.callButton.setHidden(True)
+        self.allinButton.setHidden(True)
+        self.raiseButton.setHidden(True)
+        self.raiseButton1.setHidden(True)
+        self.raiseButton2.setHidden(True)
+        self.raiseButton3.setHidden(True)
+        index=None
+        for i,e in enumerate(self.actions):
+            if e==self.action:
+                index=i
+                break
+        traverse_actions.doAction(self.Node, self.actions[index])
+        self.displaycurrentstate(self.Node)
+        self.traversehand(self.Node)
+        return 
 
     def funstartHand(self):
-        self.startHand.hide()
+        self.startHand.setHidden(True)
         deck = traverse_actions.getshuffledDeck()
         self.Node = traverse_actions.Node(deck=deck)
         self.displaycurrentstate(self.Node)
-        #self.traversehand(self.Node)
+        self.traversehand(self.Node)
 
     def displaycurrentstate(self,Node):
         ### Displaying player chips
@@ -414,6 +510,7 @@ class Ui_MainWindow(object):
         self.pot1.setHidden(True)
         self.pot2.setHidden(True)
         self.pot4.setHidden(True)
+        self.CBRpot.setHidden(True)
 
         if len(Node.chips)>0:  
             self.pot1.setHidden(False)
@@ -430,6 +527,13 @@ class Ui_MainWindow(object):
         if len(Node.chips)>4: 
             self.pot5.setHidden(False)
             self.pot5.setText("Pot5: "+str(int(Node.chips[4])))
+
+        if sum(Node.pbetCurrentRound)>.1: 
+            #print(str(int(sum(Node.pbetCurrentRound))))
+            self.CBRpot.setHidden(False)
+            self.CBRpot.setText("CBR Bets: "+str(int(sum(Node.pbetCurrentRound))))
+            self.CBRpot.adjustSize()
+            
 
         self.allin_p1.setHidden(not Node.pAllin[0])
         self.allin_p2.setHidden(not Node.pAllin[1])
@@ -496,10 +600,23 @@ class Ui_MainWindow(object):
             self.turn_p6.setHidden(False)
 
     def chooseActionforTraversal(self,actions):
-        #display info to user 
-        #take input from user
+        for e in actions:
+            if e=='F':
+                self.foldButton.setHidden(False)
+            if e=='C':
+                self.callButton.setHidden(False)
+            if e=='A':
+                self.allinButton.setHidden(False)
+            if e=='D':
+                self.raiseButton1.setHidden(False)
+                #self.raiseButton.setHidden(False)
+            if e=='E':
+                self.raiseButton2.setHidden(False)
+                #self.raiseButton.setHidden(False)
+            if e=='G':
+                self.raiseButton3.setHidden(False)
+                #self.raiseButton.setHidden(False)
 
-        pass
 
     def traversehand(self,h):
         if traverse_actions.isTerminal(h):
@@ -513,14 +630,19 @@ class Ui_MainWindow(object):
         else:
             Ph = h.currentPlayer
             actions=traverse_actions.getActions(h)
-            index = self.chooseActionforTraversal(actions)
+            self.actions=actions
+            self.chooseActionforTraversal(actions)
+            return
+
+"""
+            index=None
+            for i,e in enumerate(actions):
+                if e==self.action:
+                    index=i
+                    break
             traverse_actions.doAction(h, actions[index])
-            self.displaycurrentstate(h)
-            return 
-
-    
-
-
+"""
+            
 
 
 if __name__ == "__main__":

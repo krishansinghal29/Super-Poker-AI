@@ -864,6 +864,97 @@
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="foldButton">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>730</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>FOLD</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="allinButton">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>720</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ALL IN</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="callButton">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>730</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>CALL/CHECK</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="raiseButton">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>750</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RAISE </string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="raiseButton1">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>700</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>1/3xPot</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="raiseButton2">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>700</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>1/2xPot</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="raiseButton3">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>700</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>1xPot</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -76,10 +76,10 @@ treeMap[infoSet] = [[regretSum],[strategy]]
 
 def getshuffledDeck():
     cardspersuit=['2','3','4','5','6','7','8','9','T','J','Q','K','A']
-    suits=['C','D','H','S']
+    suits=['c','d','h','s']
     deck=[]
     for suit in suits:
-        deck.extend([suit+card for card in cardspersuit])
+        deck.extend([card+suit for card in cardspersuit])
     random.shuffle(deck)
     return deck
 
@@ -230,7 +230,7 @@ def ischanceNode(h):
             return True
     for i,e in enumerate(h.pbetCurrentRound):
         if h.pFolded[i]!=True and h.pAllin[i]!=True:
-            if e-maxbet<.1:
+            if e-maxbet<-.1:
                 return False
             if bet!=None:
                 if abs(bet-e)>.1:
@@ -506,7 +506,7 @@ def MCCFR_P(minutes=1):
     print(len(treeMap.keys()))
     return 0
 
-MCCFR_P(minutes=3)
+#MCCFR_P(minutes=3)
 #print(1==BETTING_ROUND_FLOP)
 """
 deck= getshuffledDeck()
