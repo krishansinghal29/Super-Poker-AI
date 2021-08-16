@@ -11,6 +11,7 @@ y=x
 y[0]=500
 print(x)
 """
+"""
 a=[5,0,1,2,3,4,5]
 #print(list(map(lambda x:0,a)))
 a.sort()
@@ -75,3 +76,13 @@ def ischanceNode():
                 bet=e
     return True
 print(ischanceNode())
+"""
+d={1:0}
+def discountRegrets(a,b):
+    print("check")
+    d[1]=0
+    return 1
+treeMap={1:0,2:0}
+print(treeMap.keys())
+list(map(lambda key : discountRegrets(key,1), treeMap.keys()))
+print(d[1])

@@ -153,6 +153,7 @@ class Ui_MainWindow(object):
         deck = traverse_actions.getshuffledDeck()
         rootNode = traverse_actions.Node(deck=deck)
         traverse_actions.traversehand(rootNode)
+        
 
 
 if __name__ == "__main__":

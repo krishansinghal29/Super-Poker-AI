@@ -1,2 +1,1 @@
-remaining: Board, Pots, pAllin,  currentPlayer, pbetCurrentRound, Action buttons
-done: pchips, pCards, pFolded,
+1.correct is change node to support if every player checked

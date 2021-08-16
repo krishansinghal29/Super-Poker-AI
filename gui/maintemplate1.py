@@ -221,19 +221,7 @@ class Ui_MainWindow(object):
             self.cards_p6_1.setPixmap(QtGui.QPixmap("../resources/deck/"+rootNode.pCards[5][0]+".png"))
             self.cards_p6_2.setPixmap(QtGui.QPixmap("../resources/deck/"+rootNode.pCards[5][1]+".png"))
 
-"""
-        self.cards_p1_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p2_1.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p2_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p3_1.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p3_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p4_1.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p4_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p5_1.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p5_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p6_1.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-        self.cards_p6_2.setPixmap(QtGui.QPixmap("../resources/card_back.png"))
-"""
+        
 
 
 

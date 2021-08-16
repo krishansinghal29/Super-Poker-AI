@@ -498,7 +498,7 @@ class Ui_MainWindow(object):
     def chooseActionforTraversal(self,actions):
         #display info to user 
         #take input from user
-
+        
         pass
 
     def traversehand(self,h):

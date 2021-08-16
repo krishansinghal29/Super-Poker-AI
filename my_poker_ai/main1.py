@@ -1,8 +1,19 @@
 import datetime
+from itertools import count
 import random
 import copy
 
-STRATEGY_INTERVAL = 100 #10000
+import os
+dirname = os.path.dirname(__file__)
+import sys
+sys.path.append(dirname)
+
+from evaluate import evaluate_poker_table
+
+to_print = False
+ranks = '23456789TJQKA'
+
+STRATEGY_INTERVAL = 10000 #10000
 PLAYERS= [0,1,2,3,4,5]
 PRUNE_THRESHOLD = 2  #200
 LCFR_THRESHOLD = 400
@@ -19,9 +30,9 @@ BETTING_ROUND_RIVER = 3
 BETTING_OVER = 4
 
 ACTIONS_FIRST_RAISE_CHAR=['D','E','G']
-ACTIONS_SECOND_RAISE_CHAR=['G']
+ACTIONS_SECOND_RAISE_CHAR=['E','G']
 ACTIONS_FIRST_RAISE=[1/3,1/2,1]
-ACTIONS_SECOND_RAISE=[1]
+ACTIONS_SECOND_RAISE=[1/2,1]
 ACTIONS_DIC={'D':1/3,'E':1/2,'G':1}
 
 treeMap={}
@@ -35,13 +46,15 @@ class Node:
             self.chips = [0]
             self.pFolded = [False for i in PLAYERS]
             self.pAllin = [False for i in PLAYERS]
-            self.pCards = [[self.deck.pop(),self.deck.pop()] for i in PLAYERS]
+            self.pCards = [sorted([self.deck.pop(),self.deck.pop()], key=lambda x: (-ranks.find(x[0]),x[1])) for i in PLAYERS]
             self.currentPlayer = 2 if len(PLAYERS)>2 else 1
             self.pchips = list(map(lambda x: STARTING_STACK if x > 1 else STARTING_STACK-BIG_BLIND if x==1 else STARTING_STACK-SMALL_BLIND,PLAYERS))
+            #self.pchips = list(map(lambda x: STARTING_STACK/x if x > 1 else STARTING_STACK/x-BIG_BLIND if x==1 else STARTING_STACK-SMALL_BLIND,PLAYERS))
             self.pbetCurrentRound = list(map(lambda x: 0 if x > 1 else BIG_BLIND if x==1 else SMALL_BLIND,PLAYERS))
             self.pPot = [0 for i in PLAYERS]
             self.rRaise = 0
             self.actionHistory =""
+            self.pMax=2
         else:
             self.deck = h.deck[:]
             self.bettingRound = h.bettingRound
@@ -56,6 +69,7 @@ class Node:
             self.pPot = h.pPot[:]
             self.rRaise=h.rRaise
             self.actionHistory = h.actionHistory[:]
+            self.pMax = h.pMax
     def get_values(self):
         #print(self.deck) 
         print("bettingRound: ",self.bettingRound)
@@ -68,6 +82,8 @@ class Node:
         print("pchips: ",self.pchips) 
         print("pbet_current_round : ",self.pbetCurrentRound)
         print("player pots : ",self.pPot)
+        print("raise : ",self.rRaise)
+        print("pMax turn: ",self.pMax)
         return 0
 """
 define infoset structure
@@ -84,13 +100,16 @@ def getshuffledDeck():
     return deck
 
 def updateStrategy(h, p):
-    print("Updating Strategy")
-    if isTerminal(h) or noActionleft_P(h,p) or h.bettingRound>0:
+    #print("Updating Strategy")
+    if h.bettingRound>0 or noActionleft_P(h,p) or isTerminal(h):
         return 
     elif ischanceNode(h):
-        nextRound(h)
-        updateStrategy(h,p)
+        # No need to fetch next betting round
+        #nextRound(h)
+        #updateStrategy(h,p)
+        return
     elif h.currentPlayer==p:
+        #print('1')
         I = getInformationSet(h, p)
         actions=getActions(h)
         if I not in treeMap:
@@ -102,14 +121,16 @@ def updateStrategy(h, p):
         doAction(h, actions[index])
         updateStrategy(h,p)
     else:
+        #print('2')
         actions=getActions(h)
         for action in actions:
-            _h = Node(h=h)
+            _h=Node(h=h)
             doAction(_h, action)
             updateStrategy(_h,p)
-    return 
+    return
 
 def discountRegrets(I,d):
+    #print("check")
     assert I in treeMap, "Infoset not found"
     treeMap[I][0]=[e/d for e in treeMap[I][0]]
     if len(treeMap[I])>1:
@@ -119,12 +140,13 @@ def discountRegrets(I,d):
 def isTerminal(h):
     if h.bettingRound == 4 or h.pFolded.count(True) == len(PLAYERS)-1 or (h.pFolded.count(True)+h.pAllin.count(True))==len(PLAYERS):
         return True
-    if ischanceNode(h)==True and h.bettingRound==3:
+    if h.bettingRound==3 and ischanceNode(h)==True:
         return True
     return False
 
 def updatechips(h):
-    print("Updating chips")
+    if to_print==True:
+        print("Updating chips")
     presentPot = len(h.chips)-1
     while sum(h.pbetCurrentRound)>0.1:
         if presentPot > len(h.chips)-1:
@@ -138,14 +160,47 @@ def updatechips(h):
         presentPot+=1
         if presentPot>10:
             raise AssertionError ("Infinite loop possible")
-    h.get_values()
-    print("\n")
+    
+    if to_print==True:
+        h.get_values()
+        print("\n")
     return
 
 def showdown(h):
     if h.bettingRound !=4:
         updatechips(h)
     # implement hand rankings
+    if h.bettingRound==BETTING_ROUND_PREFLOP:
+        h.board.extend(sorted([h.deck.pop(),h.deck.pop(),h.deck.pop()],key=lambda x: (-ranks.find(x[0]),x[1])))
+    elif h.bettingRound==BETTING_ROUND_FLOP:
+        h.board.append(h.deck.pop())
+    elif h.bettingRound==BETTING_ROUND_TURN:
+        h.board.append(h.deck.pop())
+
+    scores = evaluate_poker_table(h.pCards,h.board)
+    scores_and_index=[(i,e,h.pPot[i]) for i,e in enumerate(scores)]
+    players = sorted(scores_and_index , key=lambda x:(x[1],-x[2]),reverse=True)
+    #print(players)
+    for i in range(len(players)):
+        p=players[i][0]
+        if h.pFolded[p]!=True:
+            eq_score=i
+            count_eq=1
+            for j in range(i+1,len(PLAYERS)):
+                if players[i][1]!=players[j][1]:
+                    break
+                if h.pFolded[players[j][0]]!=True:
+                    count_eq+=1
+                    eq_score=j
+            pot=h.pPot[p] 
+            for pot_i in range(0,pot+1):
+                for j in range(i,eq_score+1):
+                    if h.pFolded[players[j][0]]!=True:
+                        h.pchips[players[j][0]]+=h.chips[pot_i]/count_eq
+                h.chips[pot_i]=0
+            if pot == len(h.chips):
+                break
+    """
     players=PLAYERS[:]
     random.shuffle(players)
     for p in players:
@@ -156,6 +211,7 @@ def showdown(h):
                 h.chips[i]=0
             if pot == len(h.chips):
                 break
+    """
     return
 
 def getUtility(h,p):
@@ -172,14 +228,12 @@ def noActionleft_P(h,p):
     return _answer
 
 def nextRound(h):
-    """
-
-    """
-    print("Getting next round")
+    if to_print==True:
+        print("Getting next round")
     assert ischanceNode(h),"h is not a change node, next round can't be requested"
-    #print(h.bettingRound)
+
     h.bettingRound+=1
-    print(h.bettingRound)
+    h.pMax=0
 
     setcurrentPlayer=False
     for e in PLAYERS:
@@ -207,7 +261,8 @@ def nextRound(h):
             raise AssertionError ("Infinite loop possible")
     #print(h.bettingRound,h.bettingRound==BETTING_ROUND_FLOP)
     if h.bettingRound==BETTING_ROUND_FLOP:
-        h.board.extend([h.deck.pop(),h.deck.pop(),h.deck.pop()])
+        h.board.extend(sorted([h.deck.pop(),h.deck.pop(),h.deck.pop()],key=lambda x: (-ranks.find(x[0]),x[1])))
+
     elif h.bettingRound==BETTING_ROUND_TURN:
         h.board.append(h.deck.pop())
     elif h.bettingRound==BETTING_ROUND_RIVER:
@@ -215,8 +270,10 @@ def nextRound(h):
     else:
         raise AssertionError ("Next round undefined")
 
-    h.get_values()
-    print("\n")
+    
+    if to_print==True:
+        h.get_values()
+        print("\n")
     return
 
 def ischanceNode(h):
@@ -224,10 +281,22 @@ def ischanceNode(h):
     maxbet=max(h.pbetCurrentRound)
     assert maxbet>-.1,"Negative value found"
     if maxbet<0.1:
-        if h.currentPlayer!=PLAYERS[-1]:
-            return False
-        else:
+        assert h.rRaise==0, "Raise not zero but bet is zero"
+        if h.pMax>h.currentPlayer:
             return True
+        else:
+            return False
+        """
+        if h.pMax==True:
+            #h.pMax=False
+            print("Aarooshi got fucked")
+            return True
+        else:
+            if h.currentPlayer==PLAYERS[-1]:
+                h.pMax=True
+            print("Aayushi got fucked")
+            return False
+        """
     for i,e in enumerate(h.pbetCurrentRound):
         if h.pFolded[i]!=True and h.pAllin[i]!=True:
             if e-maxbet<-.1:
@@ -242,8 +311,9 @@ def ischanceNode(h):
     return True
 
 def doAction(h,action):
-    print("Doing Action")
-    print("Action: ",action)
+    if to_print==True:
+        print("Doing Action")
+        print("Action: ",action)
 
     p=h.currentPlayer
     playerchips=h.pchips[p]
@@ -288,13 +358,15 @@ def doAction(h,action):
         if h.pAllin[player]!=True and h.pFolded[player]!=True:
             h.currentPlayer=player
             break
-    h.get_values()  #print node
-    print("\n")
+    h.pMax=max(h.pMax,h.currentPlayer)
+    if to_print==True:
+        h.get_values()  #print node
+        print("\n")
     return 
     
 
 def getInformationSet(h,p):
-    assert h.currentPlayer==p,"Infoset requested not for current player"
+    assert h.currentPlayer==p, "Infoset requested not for current player"
     actionInfoset=h.actionHistory
     cardsInfoset=h.pCards[p][0]+h.pCards[p][0][1]
     for e in h.board:
@@ -320,7 +392,8 @@ def chooseActionFromStrategy(strategyI):
     return random.choices(range(len(strategyI)), strategyI)[0]
 
 def getActions(h):
-    print("Getting actions")
+    if to_print==True:
+        print("Getting actions")
     #h.get_values()
     p=h.currentPlayer
     playerchips=h.pchips[p]
@@ -341,7 +414,7 @@ def getActions(h):
     firstRaise = None
     lastRaise = None
     for i,e in enumerate(raiseSizes):
-        if e>toMatch+.1 and firstRaise==None:
+        if e>callSize+.1 and firstRaise==None:
             firstRaise=i
         if e>playerchips-.1 and lastRaise==None:
             lastRaise=i
@@ -350,7 +423,7 @@ def getActions(h):
     if firstRaise==None:
         firstRaise=len(raiseSizes)
     if lastRaise<=firstRaise:
-        if toMatch>playerchips-.1:
+        if callSize>playerchips-.1:
             actions.extend(['F','A'])
         else:
             actions.extend(['F','C','A'])
@@ -359,7 +432,8 @@ def getActions(h):
         for i in range(firstRaise,lastRaise):
             actions.append(ACTIONS_RAISE_CHAR[i])
         actions.append('A')
-    print("Actions found: ",actions,"\n")
+    if to_print==True:
+        print("Actions found: ",actions,"\n")
     return actions
 
 def getnumActions(h):
@@ -459,7 +533,8 @@ def traverseMCCFR(h,p):
         strategyI = calculateStrategy(I)
 
         index = chooseActionFromStrategy(strategyI)
-        print("Available and chosen action: ",actions,index)
+        if to_print==True:
+            print("Available and chosen action: ",actions,index)
         doAction(h, actions[index])
         return traverseMCCFR(h,p)
 
@@ -470,8 +545,9 @@ def MCCFR_P(minutes=1):
     start = datetime.datetime.now().timestamp()
     iterations = 0
     t = 0
+    discounted = 0
     while (t / 60 < minutes):
-        print('Iteration: ',iterations)
+        #print('Iteration: ',iterations)
         t = datetime.datetime.now().timestamp() - start
         iterations += 1
 
@@ -484,7 +560,9 @@ def MCCFR_P(minutes=1):
         for p in PLAYERS:
             rootNode=Node(h=rootN)
             if iterations % STRATEGY_INTERVAL == 0:
-                updateStrategy(rootNode, p)
+                print("Updating Strategy")
+                rootNode_copy=Node(h=rootN)
+                updateStrategy(rootNode_copy, p)
 
             if t / 60 > PRUNE_THRESHOLD:
                 q = random.random()
@@ -494,22 +572,57 @@ def MCCFR_P(minutes=1):
                     traverseMCCFR_P(rootNode,p)
             else:
                 traverseMCCFR(rootNode,p)
-        discounted = 0
+
         m = int(t / 60)
         if ( m < LCFR_THRESHOLD) and (m % DISCOUNT_INTERVAL == 0) and m!=discounted:
+            print('Discounting Strategy')
             discounted = m
             d = (m / DISCOUNT_INTERVAL) / (m / DISCOUNT_INTERVAL + 1)
             #for p in PLAYERS:
-            map(lambda key : discountRegrets(key,d), treeMap.keys())
+            for key in treeMap.keys():
+                discountRegrets(key,d)
+            #list(map(lambda key : discountRegrets(key,d), treeMap.keys()))
     
     print("Done")
     print(len(treeMap.keys()))
     return 0
 
-#MCCFR_P(minutes=3)
+#MCCFR_P(minutes=10)
 #print(1==BETTING_ROUND_FLOP)
 """
 deck= getshuffledDeck()
 a=Node(deck=deck)
 print(a.get_values())
+"""
+
+
+### checking approx number of action sequences
+start = datetime.datetime.now().timestamp()
+def getnum_actionSequence(h):
+    numActionSequence=0
+    t = datetime.datetime.now().timestamp() - start
+    if(t/60>240):
+        print("Time Finish")
+        return 1
+    if isTerminal(h):
+        lengthactionHistory=len(h.actionHistory)
+        if(lengthactionHistory>35):
+            print("Length Action History: ",lengthactionHistory)
+        return 1
+    elif ischanceNode(h):
+        nextRound(h)
+        numActionSequence+=getnum_actionSequence(h)
+    else:
+        actions=getActions(h)
+        for action in actions:
+            _h=Node(h=h)
+            doAction(_h, action)
+            numActionSequence+=getnum_actionSequence(_h)
+    return numActionSequence
+
+"""
+deck = getshuffledDeck()
+rootN = Node(deck=deck)
+numActionSequence=getnum_actionSequence(rootN)
+print(numActionSequence)
 """

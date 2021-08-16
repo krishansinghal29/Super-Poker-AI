@@ -213,19 +213,19 @@ class Ui_MainWindow(object):
         self.CBRpot.setGeometry(QtCore.QRect(470, 410, 110, 16))
         self.CBRpot.setObjectName("CBRpot")
         self.pot5 = QtWidgets.QLabel(self.centralwidget)
-        self.pot5.setGeometry(QtCore.QRect(330, 390, 55, 16))
+        self.pot5.setGeometry(QtCore.QRect(330, 390, 55, 23))
         self.pot5.setObjectName("pot5")
         self.pot3 = QtWidgets.QLabel(self.centralwidget)
-        self.pot3.setGeometry(QtCore.QRect(400, 390, 55, 16))
+        self.pot3.setGeometry(QtCore.QRect(400, 390, 55, 23))
         self.pot3.setObjectName("pot3")
         self.pot1 = QtWidgets.QLabel(self.centralwidget)
-        self.pot1.setGeometry(QtCore.QRect(470, 390, 55, 16))
+        self.pot1.setGeometry(QtCore.QRect(470, 390, 55, 23))
         self.pot1.setObjectName("pot1")
         self.pot2 = QtWidgets.QLabel(self.centralwidget)
-        self.pot2.setGeometry(QtCore.QRect(540, 390, 55, 16))
+        self.pot2.setGeometry(QtCore.QRect(540, 390, 55, 23))
         self.pot2.setObjectName("pot2")
         self.pot4 = QtWidgets.QLabel(self.centralwidget)
-        self.pot4.setGeometry(QtCore.QRect(610, 390, 55, 16))
+        self.pot4.setGeometry(QtCore.QRect(610, 390, 55, 23))
         self.pot4.setObjectName("pot4")
         self.allin_p1 = QtWidgets.QLabel(self.centralwidget)
         self.allin_p1.setGeometry(QtCore.QRect(410, 110, 21, 16))
@@ -318,11 +318,11 @@ class Ui_MainWindow(object):
         self.p3_pBet.setText(_translate("MainWindow", "PbetCR"))
         self.p4_pBet.setText(_translate("MainWindow", "PbetCR"))
         self.p5_pBet.setText(_translate("MainWindow", "PbetCR"))
-        self.pot5.setText(_translate("MainWindow", "Pot5: 0"))
-        self.pot3.setText(_translate("MainWindow", "Pot3: 0"))
-        self.pot1.setText(_translate("MainWindow", "Pot1: 0"))
-        self.pot2.setText(_translate("MainWindow", "Pot2: 0"))
-        self.pot4.setText(_translate("MainWindow", "Pot4: 0"))
+        self.pot5.setText(_translate("MainWindow", "P5 0"))
+        self.pot3.setText(_translate("MainWindow", "P3 0"))
+        self.pot1.setText(_translate("MainWindow", "P1 0"))
+        self.pot2.setText(_translate("MainWindow", "P2 0"))
+        self.pot4.setText(_translate("MainWindow", "P4 0"))
         self.CBRpot.setText(_translate("MainWindow", "CBR Bets: 0"))
         self.foldButton.setText(_translate("MainWindow", "FOLD"))
         self.allinButton.setText(_translate("MainWindow", "ALL IN"))
@@ -372,7 +372,7 @@ class Ui_MainWindow(object):
         self.raiseButton.clicked.connect(self.selectraiseAction)
         self.raiseButton1.clicked.connect(lambda: self.selectAction('D'))
         self.raiseButton2.clicked.connect(lambda: self.selectAction('E'))
-        self.raiseButton3.clicked.connect(lambda: self.selectAction('F'))
+        self.raiseButton3.clicked.connect(lambda: self.selectAction('G'))
 
         self.foldButton.setHidden(True)
         self.callButton.setHidden(True)
@@ -437,6 +437,7 @@ class Ui_MainWindow(object):
         self.Node = traverse_actions.Node(deck=deck)
         self.displaycurrentstate(self.Node)
         self.traversehand(self.Node)
+        return
 
     def displaycurrentstate(self,Node):
         ### Displaying player chips
@@ -514,19 +515,19 @@ class Ui_MainWindow(object):
 
         if len(Node.chips)>0:  
             self.pot1.setHidden(False)
-            self.pot1.setText("Pot1: "+str(int(Node.chips[0])))
+            self.pot1.setText("P1 "+str(int(Node.chips[0])))
         if len(Node.chips)>1:    
             self.pot2.setHidden(False)
-            self.pot2.setText("Pot2: "+str(int(Node.chips[1])))
+            self.pot2.setText("P2 "+str(int(Node.chips[1])))
         if len(Node.chips)>2: 
             self.pot3.setHidden(False)
-            self.pot3.setText("Pot3: "+str(int(Node.chips[2])))
+            self.pot3.setText("P3 "+str(int(Node.chips[2])))
         if len(Node.chips)>3: 
             self.pot4.setHidden(False)
-            self.pot4.setText("Pot4: "+str(int(Node.chips[3])))
+            self.pot4.setText("P4 "+str(int(Node.chips[3])))
         if len(Node.chips)>4: 
             self.pot5.setHidden(False)
-            self.pot5.setText("Pot5: "+str(int(Node.chips[4])))
+            self.pot5.setText("P5 "+str(int(Node.chips[4])))
 
         if sum(Node.pbetCurrentRound)>.1: 
             #print(str(int(sum(Node.pbetCurrentRound))))
@@ -542,21 +543,18 @@ class Ui_MainWindow(object):
         self.allin_p5.setHidden(not Node.pAllin[4])
         self.allin_p6.setHidden(not Node.pAllin[5])
 
-        if Node.bettingRound==0:
-            self.cards_b1.setHidden(True)
-            self.cards_b2.setHidden(True)
-            self.cards_b3.setHidden(True)
-            self.cards_b4.setHidden(True)
-            self.cards_b5.setHidden(True)
-        elif Node.bettingRound==1:
+        self.cards_b1.setHidden(True)
+        self.cards_b2.setHidden(True)
+        self.cards_b3.setHidden(True)
+        self.cards_b4.setHidden(True)
+        self.cards_b5.setHidden(True)
+        if Node.bettingRound==1:
             self.cards_b1.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[0]+".png"))
             self.cards_b2.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[1]+".png"))
             self.cards_b3.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[2]+".png"))
             self.cards_b1.setHidden(False)
             self.cards_b2.setHidden(False)
             self.cards_b3.setHidden(False)
-            self.cards_b4.setHidden(True)
-            self.cards_b5.setHidden(True)
         elif Node.bettingRound==2:
             self.cards_b1.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[0]+".png"))
             self.cards_b2.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[1]+".png"))
@@ -566,7 +564,6 @@ class Ui_MainWindow(object):
             self.cards_b2.setHidden(False)
             self.cards_b3.setHidden(False)
             self.cards_b4.setHidden(False)
-            self.cards_b5.setHidden(True)
         elif Node.bettingRound==3:
             self.cards_b1.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[0]+".png"))
             self.cards_b2.setPixmap(QtGui.QPixmap("../resources/deck/"+Node.board[1]+".png"))
@@ -617,15 +614,22 @@ class Ui_MainWindow(object):
                 self.raiseButton3.setHidden(False)
                 #self.raiseButton.setHidden(False)
 
+    def startnextHand(self):
+        self.startHand.setText('Start Next Hand')
+        self.startHand.setHidden(False)
+        self.Node.bettingRound=4
+        self.displaycurrentstate(self.Node)
 
     def traversehand(self,h):
         if traverse_actions.isTerminal(h):
             traverse_actions.showdown(h)
             self.displaycurrentstate(h)
+            self.startnextHand()
             return
         elif traverse_actions.ischanceNode(h):
             traverse_actions.nextRound(h)
             self.displaycurrentstate(h)
+            self.traversehand(h)
             return 
         else:
             Ph = h.currentPlayer
