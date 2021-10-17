@@ -289,12 +289,12 @@ def ischanceNode(h):
         """
         if h.pMax==True:
             #h.pMax=False
-            print("Aarooshi got fucked")
+            print("fuck")
             return True
         else:
             if h.currentPlayer==PLAYERS[-1]:
                 h.pMax=True
-            print("Aayushi got fucked")
+            print("fuck")
             return False
         """
     for i,e in enumerate(h.pbetCurrentRound):
@@ -382,7 +382,7 @@ def calculateStrategy(I):
     _sum=sum(e for e in regretSum)
     #for e in regretSum:
     if _sum>0:
-        strategyI = [e/_sum for e in regretSum]
+        strategyI = [e/_sum for e in regretSum]            ## update R+
     else:
         strategyI = [1/numActions]*numActions
 
